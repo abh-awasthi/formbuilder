@@ -1732,50 +1732,65 @@ abstract class CI_DB_driver {
 	 * @param	bool	whether to localize the message
 	 * @return	string	sends the application/views/errors/error_db.php template
 	 */
-	public function display_error($error = '', $swap = '', $native = FALSE)
+function display_error($error = '', $swap = '', $native = FALSE)
 	{
 		$LANG =& load_class('Lang', 'core');
 		$LANG->load('db');
 
 		$heading = $LANG->line('db_error_heading');
 
-		if ($native === TRUE)
+		if ($native == TRUE)
 		{
-			$message = (array) $error;
+			$message = $error;
 		}
 		else
 		{
-			$message = is_array($error) ? $error : array(str_replace('%s', $swap, $LANG->line($error)));
+			$message = ( ! is_array($error)) ? array(str_replace('%s', $swap, $LANG->line($error))) : $error;
 		}
 
 		// Find the most likely culprit of the error by going through
 		// the backtrace until the source file is no longer in the
 		// database folder.
+
 		$trace = debug_backtrace();
+
 		foreach ($trace as $call)
 		{
-			if (isset($call['file'], $call['class']))
+			if (isset($call['file']) && strpos($call['file'], BASEPATH.'database') === FALSE)
 			{
-				// We'll need this on Windows, as APPPATH and BASEPATH will always use forward slashes
-				if (DIRECTORY_SEPARATOR !== '/')
-				{
-					$call['file'] = str_replace('\\', '/', $call['file']);
-				}
+				// Found it - use a relative path for safety
+				$message[] = 'Filename: '.str_replace(array(BASEPATH, APPPATH), '', $call['file']);
+				$message[] = 'Line Number: '.$call['line'];
 
-				if (strpos($call['file'], BASEPATH.'database') === FALSE && strpos($call['class'], 'Loader') === FALSE)
-				{
-					// Found it - use a relative path for safety
-					$message[] = 'Filename: '.str_replace(array(APPPATH, BASEPATH), '', $call['file']);
-					$message[] = 'Line Number: '.$call['line'];
-					break;
-				}
+				break;
 			}
 		}
 
 		$error =& load_class('Exceptions', 'core');
-		echo $error->show_error($heading, $message, 'error_db');
-		exit(8); // EXIT_DATABASE
+		log_message('info', " Database Error: " . print_r($heading, true)."<br/>". print_r($message, true));
+		//Sending the corresponding mail
+                  
+        $CI =& get_instance();
+        $CI->load->library('email');
+        $CI->load->library('session');
+        $load_view = $error->show_error($heading, $message, 'error_db');
+        $userdata = $CI->session->all_userdata();
+        foreach($userdata as $key=>$value){
+            $load_view .= '<br>'.$key .' - '.$value;
+        }
+        
+        $CI->email->from('booking@example.com', 'ABC Team');
+        $CI->email->to('abhi@gmail.com');
+        $CI->email->subject('Database Error');
+        $CI->email->message($load_view);
+
+       	$CI->email->send();
+        //echo $CI->email->print_debugger();
+        echo $error->show_error($heading, $message, 'error_db');
+		
+		exit;
 	}
+
 
 	// --------------------------------------------------------------------
 

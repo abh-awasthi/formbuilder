@@ -83,3 +83,18 @@ defined('EXIT_USER_INPUT')     OR define('EXIT_USER_INPUT', 7); // invalid user 
 defined('EXIT_DATABASE')       OR define('EXIT_DATABASE', 8); // database error
 defined('EXIT__AUTO_MIN')      OR define('EXIT__AUTO_MIN', 9); // lowest automatically-assigned error code
 defined('EXIT__AUTO_MAX')      OR define('EXIT__AUTO_MAX', 125); // highest automatically-assigned error code
+
+///  USERS CONSTANTS//
+define('USER_DEACTIVATED_SUCCESSFULLY', 'User has been deactivated successfully !');
+define('ERROR_USER_DEACTIVATED_SUCCESSFULLY', 'User has not been deactivated successfully !');
+define('USER_DEACTIVATED_ID_NOT_FOUND', 'User Id not found to deactivate !');
+define('USER_CAN_NOT_DEACTIVATE_ITSELF', 'You can not deactivate your self. As you are admin !');
+define('MUST_BE_ADMIN_TO_DO', 'You must be admin to perform this action !');
+define('USER_ACTIVATED', 'User has been activated successfully !');
+define('ERROR_USER_ACTIVATED', 'User has not been activated!');
+define('USER_ACTIVATE_ID_NOT_FOUND', 'User Id not found to activate !');
+define('USER_CAN_NOT_ACTIVATE_ITSELF', 'You can not activate your self. As you are admin !');
+define('USER_ID_NOT_FOUND', 'User Id not found !');
+define('USER_DELETED', 'User has been deleted successfully!');
+define('ERROR_USER_DELETED', 'Error in deleting user !');
+define('USER_CAN_NOT_DELETE_ITSELF', 'You can not delete yourself !');

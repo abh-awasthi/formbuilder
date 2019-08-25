@@ -15,6 +15,7 @@ class Auth extends CI_Controller
 		$this->load->database();
 		$this->load->library(['ion_auth', 'form_validation']);
 		$this->load->helper(['url', 'language']);
+		$this->load->model('Ion_auth_model');
 
 		$this->form_validation->set_error_delimiters($this->config->item('error_start_delimiter', 'ion_auth'), $this->config->item('error_end_delimiter', 'ion_auth'));
 
@@ -406,6 +407,21 @@ class Auth extends CI_Controller
 		}
 	}
 
+
+	/*  Super Admin Activation User  */
+
+
+
+
+	public function activate_by_admin($id, $code = FALSE)
+	{
+ 
+	   $response = $this->ion_auth->activate_by_admin($id);
+ 	   echo json_encode($response);
+
+	}
+
+ 
 	/**
 	 * Deactivate the user
 	 *
@@ -416,44 +432,20 @@ class Auth extends CI_Controller
 		if (!$this->ion_auth->logged_in() || !$this->ion_auth->is_admin())
 		{
 			// redirect them to the home page because they must be an administrator to view this
-			show_error('You must be an administrator to view this page.');
+			$response['status']=FALSE;
+			$response['message']=USER_DEACTIVATED_ID_NOT_FOUND;
+			echo json_encode($response);
+			exit;
 		}
 
 		$id = (int)$id;
-
-		$this->load->library('form_validation');
-		$this->form_validation->set_rules('confirm', $this->lang->line('deactivate_validation_confirm_label'), 'required');
-		$this->form_validation->set_rules('id', $this->lang->line('deactivate_validation_user_id_label'), 'required|alpha_numeric');
-
-		if ($this->form_validation->run() === FALSE)
-		{
-			// insert csrf check
-			$this->data['csrf'] = $this->_get_csrf_nonce();
-			$this->data['user'] = $this->ion_auth->user($id)->row();
-
-			$this->_render_page('auth' . DIRECTORY_SEPARATOR . 'deactivate_user', $this->data);
-		}
-		else
-		{
-			// do we really want to deactivate?
-			if ($this->input->post('confirm') == 'yes')
-			{
-				// do we have a valid request?
-				if ($this->_valid_csrf_nonce() === FALSE || $id != $this->input->post('id'))
-				{
-					show_error($this->lang->line('error_csrf'));
-				}
-
-				// do we have the right userlevel?
+			    // do we really want to deactivate?
 				if ($this->ion_auth->logged_in() && $this->ion_auth->is_admin())
 				{
-					$this->ion_auth->deactivate($id);
+					$response = $this->ion_auth->deactivate($id);
 				}
-			}
-
-			// redirect them back to the auth page
-			redirect('auth', 'refresh');
-		}
+				echo json_encode($response);
+		 
 	}
 
 	/**
@@ -465,7 +457,7 @@ class Auth extends CI_Controller
 
 		if (!$this->ion_auth->logged_in() || !$this->ion_auth->is_admin())
 		{
-			redirect('auth', 'refresh');
+			// redirect('auth', 'refresh');
 		}
 
 		$tables = $this->config->item('tables', 'ion_auth');
@@ -506,65 +498,26 @@ class Auth extends CI_Controller
 		{
 			// check to see if we are creating the user
 			// redirect them back to the admin page
-			$this->session->set_flashdata('message', $this->ion_auth->messages());
-			redirect("auth", 'refresh');
+			//$this->session->set_flashdata('message', $this->ion_auth->messages());
+			$message = $this->ion_auth->messages();
+			$status = TRUE;
+			echo json_encode(array('status'=>$status,'message'=>$message));
+		// 	echo $this->ion_auth->messages(); 
+		  //  redirect("auth", 'refresh');
 		}
 		else
 		{
+
+
 			// display the create user form
 			// set the flash data error message if there is one
 			$this->data['message'] = (validation_errors() ? validation_errors() : ($this->ion_auth->errors() ? $this->ion_auth->errors() : $this->session->flashdata('message')));
 
-			$this->data['first_name'] = [
-				'name' => 'first_name',
-				'id' => 'first_name',
-				'type' => 'text',
-				'value' => $this->form_validation->set_value('first_name'),
-			];
-			$this->data['last_name'] = [
-				'name' => 'last_name',
-				'id' => 'last_name',
-				'type' => 'text',
-				'value' => $this->form_validation->set_value('last_name'),
-			];
-			$this->data['identity'] = [
-				'name' => 'identity',
-				'id' => 'identity',
-				'type' => 'text',
-				'value' => $this->form_validation->set_value('identity'),
-			];
-			$this->data['email'] = [
-				'name' => 'email',
-				'id' => 'email',
-				'type' => 'text',
-				'value' => $this->form_validation->set_value('email'),
-			];
-			$this->data['company'] = [
-				'name' => 'company',
-				'id' => 'company',
-				'type' => 'text',
-				'value' => $this->form_validation->set_value('company'),
-			];
-			$this->data['phone'] = [
-				'name' => 'phone',
-				'id' => 'phone',
-				'type' => 'text',
-				'value' => $this->form_validation->set_value('phone'),
-			];
-			$this->data['password'] = [
-				'name' => 'password',
-				'id' => 'password',
-				'type' => 'password',
-				'value' => $this->form_validation->set_value('password'),
-			];
-			$this->data['password_confirm'] = [
-				'name' => 'password_confirm',
-				'id' => 'password_confirm',
-				'type' => 'password',
-				'value' => $this->form_validation->set_value('password_confirm'),
-			];
-
-			$this->_render_page('auth' . DIRECTORY_SEPARATOR . 'create_user', $this->data);
+			$message = $this->data['message'];
+			$status = FALSE;
+			echo json_encode(array('status'=>$status,'message'=>$message));
+ 		
+			//  $this->_render_page('auth' . DIRECTORY_SEPARATOR . 'login', $this->data);
 		}
 	}
 	/**
@@ -886,5 +839,25 @@ class Auth extends CI_Controller
 			return $view_html;
 		}
 	}
+
+
+
+	function users(){
+		
+		$select="id,ip_address,first_name,last_name,from_unixtime(last_login, '%d-%M-%Y %H:%i:%s') as last_login,from_unixtime(created_on, '%d-%M-%Y %H:%i:%s') as signup_on,email,phone,active,created_on";
+		$search = array('first_name','last_name','email','phone');
+		$this->Ion_auth_model->get_allUsers($select,$search);
+
+	}
+
+
+	function delete_by_admin($user){
+
+	   $response = $this->ion_auth->delete_by_admin($user);
+ 	   echo json_encode($response);
+
+	}
+
+
 
 }

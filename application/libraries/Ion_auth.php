@@ -241,6 +241,8 @@ class Ion_auth
 
 		$id = $this->ion_auth_model->register($identity, $password, $email, $additional_data, $group_ids);
 
+		$this->save_device_browser_info($id);
+
 		if (!$email_activation)
 		{
 			if ($id !== FALSE)
@@ -318,6 +320,28 @@ class Ion_auth
 			return FALSE;
 		}
 	}
+
+
+	/**
+	 * Device and Browser Info 
+	 *
+	 * @return true
+	 * @author Abhishek Awasthi
+	 **/
+
+
+	public function save_device_browser_info($id){
+
+		$additional_data_id = $this->ion_auth_model->save_device_browser_info($id);
+		if ($additional_data_id) {
+			return TRUE;
+		}else{
+			return FALSE;
+		}
+
+	}
+
+
 
 	/**
 	 * Logout
@@ -437,16 +461,64 @@ class Ion_auth
 
 		if (!isset($id))
 		{
-			$this->set_error('deactivate_unsuccessful');
-			return FALSE;
+			$return['status']=FALSE;
+			$return['message']=USER_DEACTIVATED_ID_NOT_FOUND;
 		}
 		else if ($this->logged_in() && $this->user()->row()->id == $id)
 		{
-			$this->set_error('deactivate_current_user_unsuccessful');
-			return FALSE;
+			$return['status']=FALSE;
+			$return['message']=USER_CAN_NOT_DEACTIVATE_ITSELF;
+		}else{
+			$return = $this->ion_auth_model->deactivate($id);
 		}
 
-		return $this->ion_auth_model->deactivate($id);
+		return $return;
 	}
+
+
+/*  Abhishek Awasthi  */
+	function activate_by_admin($id){
+
+		if (!isset($id))
+		{
+			$return['status']=FALSE;
+			$return['message']=USER_ACTIVATE_ID_NOT_FOUND;
+		}
+		else if ($this->logged_in() && $this->user()->row()->id == $id)
+		{
+			$return['status']=FALSE;
+			$return['message']=USER_CAN_NOT_ACTIVATE_ITSELF;
+		}else{
+			$return = $this->ion_auth_model->activate_by_admin($id);
+		}
+
+		return $return;
+
+	}
+
+
+
+	/*  Abhishek Awasthi  */
+	function delete_by_admin($id){
+
+		if (!isset($id))
+		{
+			$return['status']=FALSE;
+			$return['message']=USER_ID_NOT_FOUND;
+		}
+		else if ($this->logged_in() && $this->user()->row()->id == $id)
+		{
+			$return['status']=FALSE;
+			$return['message']=USER_CAN_NOT_DELETE_ITSELF;
+		}else{
+			$return = $this->ion_auth_model->delete_by_admin($id);
+		}
+
+		return $return;
+
+	}
+
+
+
 
 }

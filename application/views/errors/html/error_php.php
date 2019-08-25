@@ -30,4 +30,21 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 <?php endif ?>
 
+
+<?php 
+
+    $file = fopen(FCPATH."application/logs/error_" . date('Y-m-d') . ".txt", "a+") or die("Unable to open file!");
+    $res = 0;
+    system(" chmod 777 ".FCPATH."application/logs/error_" . date('Y-m-d') . ".txt", $res);
+    fwrite($file, "\n A PHP Error was encountered: ".date('Y-m-d H:i:s')."\n");
+    fwrite($file, "Severity: " . print_r($severity, TRUE)."\n");
+    fwrite($file, "Message: " . print_r($message, TRUE)."\n");
+    fwrite($file, "Filename: " . print_r($filepath, TRUE)."\n");
+    fwrite($file, "Line Number: " . print_r($line, TRUE)."\n");
+    
+    
+    fclose($file);
+
+?>
+
 </div>

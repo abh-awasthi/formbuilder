@@ -201,6 +201,7 @@ class Ion_auth_model extends CI_Model
 	{
 		$this->config->load('ion_auth', TRUE);
 		$this->load->helper('cookie', 'date');
+		$this->load->library('user_agent');
 		$this->lang->load('ion_auth');
 
 		// initialize the database
@@ -449,6 +450,69 @@ class Ion_auth_model extends CI_Model
 	}
 
 
+
+
+		/**
+	 * delete a users row 
+	 *
+	 * @param int|string|null $id
+	 *
+	 * @return array
+	 * @author Abhishek Awasthi
+	 */
+
+	 function delete_by_admin($id){
+	 		$data = [
+			    'deleted'=>1
+			];
+			$this->db->where('id',$id);
+			$this->db->update('users',$data);
+			if ($this->db->affected_rows()>0) {
+				$return['status']=TRUE;
+			    $return['message']=USER_DELETED;
+			}else{
+			    $return['status']=FALSE;
+			    $return['message']=ERROR_USER_DELETED;
+			}
+
+		 return $return;
+
+	 }
+
+
+
+
+
+	/**
+	 * Updates a users row with an activation code.
+	 *
+	 * @param int|string|null $id
+	 *
+	 * @return array
+	 * @author Abhishek Awasthi
+	 */
+
+	 function activate_by_admin($id){
+	 		$data = [
+			    'activation_selector' => NULL,
+			    'activation_code' => NULL,
+			    'active'          => 1
+			];
+			$this->db->where('id',$id);
+			$this->db->update('users',$data);
+			if ($this->db->affected_rows()>0) {
+				$return['status']=TRUE;
+			    $return['message']=USER_ACTIVATED;
+			}else{
+			    $return['status']=FALSE;
+			    $return['message']=ERROR_USER_ACTIVATED;
+			}
+
+		 return $return;
+
+	 }
+
+
 	/**
 	 * Updates a users row with an activation code.
 	 *
@@ -474,14 +538,16 @@ class Ion_auth_model extends CI_Model
 		$return = $this->db->affected_rows() == 1;
 		if ($return)
 		{
-			$this->set_message('deactivate_successful');
+			$response['status']=TRUE;
+			$response['message']=USER_DEACTIVATED_SUCCESSFULLY;
 		}
 		else
 		{
-			$this->set_error('deactivate_unsuccessful');
+			$response['status']=TRUE;
+			$response['message']=ERROR_USER_DEACTIVATED_SUCCESSFULLY;
 		}
 
-		return $return;
+		return $response;
 	}
 
 	/**
@@ -881,6 +947,44 @@ class Ion_auth_model extends CI_Model
 		$this->trigger_events('post_register');
 
 		return (isset($id)) ? $id : FALSE;
+	}
+
+	/**
+	 * login
+	 * @param    string $user_id
+	 * @return    int
+	 * @author    Abhishek
+	 */
+
+	public function save_device_browser_info($id){
+
+		if ($this->agent->is_browser())
+         {
+           $agent = $this->agent->browser();
+         }
+          elseif ($this->agent->is_robot())
+         {
+           $agent = $this->agent->robot();
+         }
+         elseif ($this->agent->is_mobile())
+         {
+           $agent = $this->agent->mobile();
+         }
+         else
+         {
+           $agent = 'Unidentified User Agent';
+         }
+
+		 $device_info = array(
+			'user_id'=>$id,
+			'ip_address'=>trim($this->input->ip_address()),
+			'browser'=>trim($agent),
+			'browser_version'=>trim($this->agent->version()),
+			'os'=>trim($this->agent->platform()),
+			'agent_full_string'=>trim($_SERVER['HTTP_USER_AGENT'])
+		);
+		$this->db->insert('user_signup_device_info',$device_info);
+		return $this->db->insert_id();
 	}
 
 	/**
@@ -2795,4 +2899,66 @@ class Ion_auth_model extends CI_Model
 			return FALSE;
 		}
 	}
+
+/*
+
+	function returns all users
+
+*/
+
+	function get_allUsers($select,$search){
+
+		
+		$this->db->select($select);
+		$this->db->where('deleted',0);
+		$this->db->from('users');
+
+		if (isset($_GET['search'])) {
+
+		   $this->db->like('id', $_GET['search']);
+
+		   foreach ($search as   $coloumn) {
+
+		        $this->db->or_like($coloumn, $_GET['search']);
+		   }
+		   
+        } else {
+           $WHERE = NULL;
+        }
+
+        if (isset($_GET['limit']) && isset($_GET['offset']) ) {
+        	$this->db->limit($_GET['limit'],$_GET['offset']);
+        }else if(isset($_GET['limit']) && !isset($_GET['offset'])){
+        	$this->db->limit($_GET['limit']);
+        }else{
+        	$this->db->limit(10);
+        }
+
+        if (isset($_GET['sort']) && isset($_GET['order'])) {
+        	$this->db->order_by($_GET['sort'],$_GET['order']);
+        }else{
+
+        	$this->db->order_by('created_on','DESC');
+        }
+
+		$data = $this->db->get()->result_array();
+		$total = $this->countUsers();
+
+		$json_data = array(
+                "total"=> $total,
+                "rows"=> $data
+            );
+
+		echo json_encode($json_data);
+
+
+	}
+
+
+	function countUsers(){
+      return $this->db->count_all_results('users');
+	}
+
+
+
 }
