@@ -84,6 +84,11 @@ defined('EXIT_DATABASE')       OR define('EXIT_DATABASE', 8); // database error
 defined('EXIT__AUTO_MIN')      OR define('EXIT__AUTO_MIN', 9); // lowest automatically-assigned error code
 defined('EXIT__AUTO_MAX')      OR define('EXIT__AUTO_MAX', 125); // highest automatically-assigned error code
 
+
+define('USERS_PROFILES_IMG', 'uploads/profiles/');
+
+
+
 ///  USERS CONSTANTS//
 define('USER_DEACTIVATED_SUCCESSFULLY', 'User has been deactivated successfully !');
 define('ERROR_USER_DEACTIVATED_SUCCESSFULLY', 'User has not been deactivated successfully !');
@@ -98,3 +103,13 @@ define('USER_ID_NOT_FOUND', 'User Id not found !');
 define('USER_DELETED', 'User has been deleted successfully!');
 define('ERROR_USER_DELETED', 'Error in deleting user !');
 define('USER_CAN_NOT_DELETE_ITSELF', 'You can not delete yourself !');
+define('GROUP_NAME_NOT_DEFINE', 'Please enter group name.');
+define('GROUP_ALREADY_EXIST', 'Please enter group name.');
+define('GROUP_CREATED', 'New group created.');
+define('GROUP_NOT_INSERTED', 'New group not created');
+define('EMAIL_NOT_FOUND', 'Email not found');
+define('IDENTITY_NOT_SET_AS_EMAIL', 'Change identity as email in cofig file.');
+define('UNKNOWN_ERROR', 'Unknown error occured. Try again');
+define('PASSWORD_RESET_EMAIL_SENT', 'Password reset email sent .');
+
+

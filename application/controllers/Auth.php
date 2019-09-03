@@ -40,25 +40,41 @@ class Auth extends CI_Controller
 		}
 		else
 		{
-			$this->data['title'] = $this->lang->line('index_heading');
+			//$this->data['title'] = $this->lang->line('index_heading');
 			
 			// set the flash data error message if there is one
-			$this->data['message'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('message');
+			//$this->data['message'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('message');
 
 			//list the users
-			$this->data['users'] = $this->ion_auth->users()->result();
+			$this->data['users'] = $this->Ion_auth_model->countUsers();
+			$this->data['groups'] = $this->Ion_auth_model->countGroups();
+			$this->data['active_users'] = $this->Ion_auth_model->activeUsers();
+			$this->data['deleted_users'] = $this->Ion_auth_model->deletedUsers();
+			$this->data['noatctive_users'] = $this->Ion_auth_model->unActivateddUsers();
+			$this->data['last_10_users'] = $this->Ion_auth_model->last_10_Users();
+
+			
 			
 			//USAGE NOTE - you can do more complicated queries like this
 			//$this->data['users'] = $this->ion_auth->where('field', 'value')->users()->result();
 			
-			foreach ($this->data['users'] as $k => $user)
-			{
-				$this->data['users'][$k]->groups = $this->ion_auth->get_users_groups($user->id)->result();
-			}
+			// foreach ($this->data['users'] as $k => $user)
+			// {
+			// 	$this->data['users'][$k]->groups = $this->ion_auth->get_users_groups($user->id)->result();
+			// }
+				    $this->load->view('auth/header2.php');
+		            $this->_render_page('auth' . DIRECTORY_SEPARATOR . 'index', $this->data);
+		            $this->load->view('auth/footer.php');
 
-			$this->_render_page('auth' . DIRECTORY_SEPARATOR . 'index', $this->data);
+			
 		}
 	}
+
+
+function testemail(){
+	$this->load->library('Imap');
+}
+
 
 	/**
 	 * Log the user in
@@ -80,9 +96,14 @@ class Auth extends CI_Controller
 			if ($this->ion_auth->login($this->input->post('identity'), $this->input->post('password'), $remember))
 			{
 				//if the login is successful
-				//redirect them back to the home page
+				//redirect them back to the home page according to user type loggedin
 				$this->session->set_flashdata('message', $this->ion_auth->messages());
-				redirect('/', 'refresh');
+				if ($this->session->userdata('group')=='admin') {
+					redirect('dashboard/', 'refresh');
+				}else{
+					echo "Not Admin";
+				}
+				
 			}
 			else
 			{
@@ -277,6 +298,54 @@ class Auth extends CI_Controller
 			}
 		}
 	}
+
+
+
+
+  public function forgot_password_by_admin()
+	{
+		
+			$identity = $this->ion_auth->where('email', $this->input->post('identity'))->users()->row();
+			if (empty($identity))
+			{
+				if ($this->config->item('identity', 'ion_auth') != 'email')
+				{
+					$response['status']=FALSE;
+					$response['message']=IDENTITY_NOT_SET_AS_EMAIL;
+					echo json_encode($response);
+				}
+				else
+				{
+					$response['status']=FALSE;
+					$response['message']=EMAIL_NOT_FOUND;
+					echo json_encode($response);
+				}
+
+			}else{
+
+			     // run the forgotten password method to email an activation code to the user
+			     $forgotten = $this->ion_auth->forgotten_password($identity->{$this->config->item('identity', 'ion_auth')});
+
+			     if ($forgotten)
+			     {
+				// if there were no errors
+			     	$response['status']=TRUE;
+					$response['message']=PASSWORD_RESET_EMAIL_SENT;
+					echo json_encode($response);
+				 
+			     }else{
+				 	$response['status']=FALSE;
+					$response['message']=UNKNOWN_ERROR;
+					echo json_encode($response);
+			   }
+
+			}
+	}
+
+
+
+
+
 
 	/**
 	 * Reset password - final step for forgotten password
@@ -678,48 +747,26 @@ class Auth extends CI_Controller
 	 */
 	public function create_group()
 	{
-		$this->data['title'] = $this->lang->line('create_group_title');
-
+	
 		if (!$this->ion_auth->logged_in() || !$this->ion_auth->is_admin())
 		{
 			redirect('auth', 'refresh');
 		}
 
-		// validate form input
-		$this->form_validation->set_rules('group_name', $this->lang->line('create_group_validation_name_label'), 'trim|required|alpha_dash');
 
-		if ($this->form_validation->run() === TRUE)
-		{
-			$new_group_id = $this->ion_auth->create_group($this->input->post('group_name'), $this->input->post('description'));
-			if ($new_group_id)
-			{
-				// check to see if we are creating the group
-				// redirect them back to the admin page
-				$this->session->set_flashdata('message', $this->ion_auth->messages());
-				redirect("auth", 'refresh');
-			}
-		}
-		else
-		{
-			// display the create group form
-			// set the flash data error message if there is one
-			$this->data['message'] = (validation_errors() ? validation_errors() : ($this->ion_auth->errors() ? $this->ion_auth->errors() : $this->session->flashdata('message')));
+			$response = $this->ion_auth->create_group($this->input->post('group_name'), $this->input->post('description'));
+			echo json_encode($response);
 
-			$this->data['group_name'] = [
-				'name'  => 'group_name',
-				'id'    => 'group_name',
-				'type'  => 'text',
-				'value' => $this->form_validation->set_value('group_name'),
-			];
-			$this->data['description'] = [
-				'name'  => 'description',
-				'id'    => 'description',
-				'type'  => 'text',
-				'value' => $this->form_validation->set_value('description'),
-			];
+	}
 
-			$this->_render_page('auth/create_group', $this->data);
-		}
+
+	function groups(){
+
+		$this->load->view('auth/header2.php');
+		$this->load->view('auth/create_group.php');
+		$this->load->view('auth/footer.php');
+
+
 	}
 
 	/**
@@ -842,12 +889,19 @@ class Auth extends CI_Controller
 
 
 
-	function users(){
+	function users_table(){
 		
 		$select="id,ip_address,first_name,last_name,from_unixtime(last_login, '%d-%M-%Y %H:%i:%s') as last_login,from_unixtime(created_on, '%d-%M-%Y %H:%i:%s') as signup_on,email,phone,active,created_on";
 		$search = array('first_name','last_name','email','phone');
 		$this->Ion_auth_model->get_allUsers($select,$search);
 
+	}
+
+	function users_groups(){
+	    $select="id,name,description ,DATE_FORMAT(created_on, '%d-%M-%Y %H:%i:%s') as created_on";
+		$search = array('name','description');
+		$response = $this->Ion_auth_model->get_allGroups($select,$search);
+		echo json_encode($response);
 	}
 
 
@@ -856,6 +910,37 @@ class Auth extends CI_Controller
 	   $response = $this->ion_auth->delete_by_admin($user);
  	   echo json_encode($response);
 
+	}
+
+	function  delete_group_by_admin(){
+
+	   $response = $this->ion_auth->delete_group_by_admin($user);
+ 	   echo json_encode($response);
+	}
+
+	function test(){
+		$this->load->view('auth/header2.php');
+		$this->load->view('auth/test.php');
+		$this->load->view('auth/footer.php');
+	}
+
+	function users(){
+		$this->load->view('auth/header2.php');
+		$this->load->view('auth/test.php');
+		$this->load->view('auth/footer.php');
+	}
+
+	function settings(){
+
+	    $this->load->view('auth/header2.php');
+		$this->load->view('auth/settings.php');
+		$this->load->view('auth/footer.php');
+
+	}
+
+
+	function testfacebook(){
+		$this->load->view('auth/facebook.php');
 	}
 
 

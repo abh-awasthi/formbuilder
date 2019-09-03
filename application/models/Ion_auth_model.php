@@ -463,7 +463,8 @@ class Ion_auth_model extends CI_Model
 
 	 function delete_by_admin($id){
 	 		$data = [
-			    'deleted'=>1
+			    'deleted'=>1,
+			    'active'=>0
 			];
 			$this->db->where('id',$id);
 			$this->db->update('users',$data);
@@ -1009,10 +1010,12 @@ class Ion_auth_model extends CI_Model
 
 		$this->trigger_events('extra_where');
 
-		$query = $this->db->select($this->identity_column . ', email, id, password, active, last_login')
+		$query = $this->db->select($this->identity_column . ', email,first_name,last_name, users.id, password, active, last_login,groups.name as group_name,groups.description as group_desc')
+						 ->join('users_groups','users.id=users_groups.user_id')
+						 ->join('groups','groups.id=users_groups.group_id')
 						  ->where($this->identity_column, $identity)
 						  ->limit(1)
-						  ->order_by('id', 'desc')
+						  ->order_by('users.id', 'desc')
 						  ->get($this->tables['users']);
 
 		if ($this->is_max_login_attempts_exceeded($identity))
@@ -2046,8 +2049,12 @@ class Ion_auth_model extends CI_Model
 		    'identity'             => $user->{$this->identity_column},
 		    $this->identity_column => $user->{$this->identity_column},
 		    'email'                => $user->email,
+		    'first_name'           => $user->first_name,
+		    'last_name'            => $user->last_name,
 		    'user_id'              => $user->id, //everyone likes to overwrite id so we'll use user_id
 		    'old_last_login'       => $user->last_login,
+		    'group'                => $user->group_name,
+		    'group_desc'           => $user->group_desc,
 		    'last_check'           => time(),
 		];
 
@@ -2139,8 +2146,11 @@ class Ion_auth_model extends CI_Model
 		}
 
 		// get the user with the selector
+
 		$this->trigger_events('extra_where');
-		$query = $this->db->select($this->identity_column . ', id, email, remember_code, last_login')
+		$query = $this->db->select($this->identity_column . ', email,first_name,last_name, users.id, password, active, last_login,groups.name as group_name,groups.description as group_desc')
+						  ->join('users_groups','users.id=users_groups.user_id')
+						  ->join('groups','groups.id=users_groups.group_id')
 						  ->where('remember_selector', $token->selector)
 						  ->where('active', 1)
 						  ->limit(1)
@@ -2197,16 +2207,18 @@ class Ion_auth_model extends CI_Model
 		// bail if the group name was not passed
 		if(!$group_name)
 		{
-			$this->set_error('group_name_required');
-			return FALSE;
+			 $response['status']=FALSE;
+			 $response['message']=GROUP_NAME_NOT_DEFINE;
+			 return $response;
 		}
 
 		// bail if the group name already exists
 		$existing_group = $this->db->get_where($this->tables['groups'], ['name' => $group_name])->num_rows();
 		if($existing_group !== 0)
 		{
-			$this->set_error('group_already_exists');
-			return FALSE;
+			 $response['status']=FALSE;
+			 $response['message']=GROUP_ALREADY_EXIST;
+			 return $response;
 		}
 
 		$data = ['name'=>$group_name,'description'=>$group_description];
@@ -2220,11 +2232,17 @@ class Ion_auth_model extends CI_Model
 		// insert the new group
 		$this->db->insert($this->tables['groups'], $data);
 		$group_id = $this->db->insert_id($this->tables['groups'] . '_id_seq');
+		if ($group_id>0) {
+			 $response['status']=TRUE;
+			 $response['message']=GROUP_CREATED;
+			 return $response;
+		}else{
+			 $response['status']=FALSE;
+			 $response['message']=GROUP_NOT_INSERTED;
+			 return $response;
+		}
 
-		// report success
-		$this->set_message('group_creation_successful');
-		// return the brand new group id
-		return $group_id;
+		
 	}
 
 	/**
@@ -2931,7 +2949,7 @@ class Ion_auth_model extends CI_Model
         }else if(isset($_GET['limit']) && !isset($_GET['offset'])){
         	$this->db->limit($_GET['limit']);
         }else{
-        	$this->db->limit(10);
+        	$this->db->limit(20);
         }
 
         if (isset($_GET['sort']) && isset($_GET['order'])) {
@@ -2959,6 +2977,79 @@ class Ion_auth_model extends CI_Model
       return $this->db->count_all_results('users');
 	}
 
+	function get_allGroups($select,$search){
+
+		$this->db->select($select);
+		$this->db->from('groups');
+
+		if (isset($_GET['search'])) {
+
+		   $this->db->like('id', $_GET['search']);
+
+		   foreach ($search as   $coloumn) {
+
+		        $this->db->or_like($coloumn, $_GET['search']);
+		   }
+		   
+        } else {
+           $WHERE = NULL;
+        }
+
+        if (isset($_GET['limit']) && isset($_GET['offset']) ) {
+        	$this->db->limit($_GET['limit'],$_GET['offset']);
+        }else if(isset($_GET['limit']) && !isset($_GET['offset'])){
+        	$this->db->limit($_GET['limit']);
+        }else{
+        	$this->db->limit(20);
+        }
+
+        if (isset($_GET['sort']) && isset($_GET['order'])) {
+        	$this->db->order_by($_GET['sort'],$_GET['order']);
+        }else{
+
+        	$this->db->order_by('created_on','DESC');
+        }
+
+		$data = $this->db->get()->result_array();
+		$total = $this->countGroups();
+
+		$json_array = array(
+                "total"=> $total,
+                "rows"=> $data
+            );
+
+		return $json_array;
+	}
+
+	function countGroups(){
+      return $this->db->count_all_results('groups');
+	}
+
+    function activeUsers(){
+       
+       return $this->db->where(['active'=>1,'deleted'=>0])->from("users")->count_all_results();
+	}
+
+	function deletedUsers(){
+		return $this->db->where(['active'=>0,'deleted'=>1])->from("users")->count_all_results();
+	}
+
+	function unActivateddUsers(){
+		return $this->db->where(['active'=>0,'deleted'=>0])->from("users")->count_all_results();
+	}
+
+	function last_10_Users(){
+
+		$select = "users.id,CONCAT(`first_name`,' ',`last_name`) as name,from_unixtime(created_on, '%d-%b-%y %h:%i %p') sign_on,created_on,users.email,phone,profile_pic ";
+		$this->db->select($select);
+		$this->db->from('users');
+		$this->db->limit(10);
+		$this->db->order_by('created_on','desc');
+		//$query = $this->db->get();
+		return $this->db->get()->result();
+
+
+	}
 
 
 }

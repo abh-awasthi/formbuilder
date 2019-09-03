@@ -52,3 +52,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $route['default_controller'] = 'auth';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
+
+$route['dashboard'] = '';
+$route['dashboard'] = 'auth';
+$route['logout'] = 'auth/logout';
+$route['users'] = 'auth/users';
+$route['settings'] = 'auth/settings';
+$route['create_group']='auth/create_group';
+$route['groups']='auth/groups';
