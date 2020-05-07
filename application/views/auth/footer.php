@@ -25,7 +25,7 @@
 		</script>
 
 			<!--scrolling js-->
-	 
+	 <script src="<?php echo base_url();?>assets/ckeditor/ckeditor.js" ></script>
 	<script src="<?php echo base_url(); ?>assets/js/scripts.js"></script>
 	<!--//scrolling js-->
 	
@@ -37,12 +37,15 @@
 	<!-- //side nav js -->
 	
 
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/bootstrap.js"></script>
 
 <link href="<?php echo base_url(); ?>assets/css/bootstraptable.css" rel="stylesheet">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/bootstrap.css">
 <link href="<?php echo base_url(); ?>assets/css/sweetalert.css" rel="stylesheet">
+<link href="<?php echo base_url(); ?>assets/css/datetimepicker.css" rel="stylesheet">
 <script src="<?php echo base_url(); ?>assets/js/sweetalert.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/datetimepicker.js"></script>
+
 <style type="text/css">
  
  </style>

@@ -86,6 +86,19 @@ defined('EXIT__AUTO_MAX')      OR define('EXIT__AUTO_MAX', 125); // highest auto
 
 
 define('USERS_PROFILES_IMG', 'uploads/profiles/');
+define('DB_ERROR_MAIL_FROM', 'db_error@example.com');
+define('DB_ERROR_MAIL_FROM_NAME', 'DB ERROR');
+define('DB_ERROR_MAIL_TO', 'abh.awasthi@gmail.com');
+
+/// FORM //
+
+define('FORM_DEACTIVATED_SUCCESSFULLY', 'Form has been deactivated successfully !');
+define('ERROR_FORM_DEACTIVATED_SUCCESSFULLY', 'Form has not been deactivated successfully !');
+define('FORM_DEACTIVATED_ID_NOT_FOUND', 'Form Id not found to deactivate. Please refresh and try again.');
+define('FORM_ACTIVATED', 'Form has been activated successfully !');
+define('ERROR_FORM_ACTIVATED', 'Form has not been activated!');
+define('FORM_DELETED', 'Form has been deleted successfully!');
+define('ERROR_FORM_DELETED', 'Error in deleting form !');
 
 
 
@@ -112,4 +125,7 @@ define('IDENTITY_NOT_SET_AS_EMAIL', 'Change identity as email in cofig file.');
 define('UNKNOWN_ERROR', 'Unknown error occured. Try again');
 define('PASSWORD_RESET_EMAIL_SENT', 'Password reset email sent .');
 
+
+define('FORM_UPDATED', 'Form Changes saved .');
+define('FORM_NOT_UPDATED', 'Form Changes not saved .');
 

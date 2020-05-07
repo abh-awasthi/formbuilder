@@ -28,15 +28,27 @@ class Auth extends CI_Controller
 	public function index()
 	{
 
+
 		if (!$this->ion_auth->logged_in())
 		{
 			// redirect them to the login page
-			redirect('auth/login', 'refresh');
+	
+		 	redirect('auth/login', 'refresh');
 		}
 		else if (!$this->ion_auth->is_admin()) // remove this elseif if you want to enable this for non-admins
 		{
 			// redirect them to the home page because they must be an administrator to view this
-			show_error('You must be an administrator to view this page.');
+			//show_error('You must be an administrator to view this page.');
+			$this->data['users'] = $this->Ion_auth_model->countUsers();
+			$this->data['groups'] = $this->Ion_auth_model->countGroups();
+			$this->data['active_users'] = $this->Ion_auth_model->activeUsers();
+			$this->data['deleted_users'] = $this->Ion_auth_model->deletedUsers();
+			$this->data['noatctive_users'] = $this->Ion_auth_model->unActivateddUsers();
+			$this->data['last_10_users'] = $this->Ion_auth_model->last_10_Users();
+
+		    $this->load->view('auth/header2.php');
+		    $this->_render_page('users' . DIRECTORY_SEPARATOR . 'index', $this->data);
+		    $this->load->view('auth/footer.php');
 		}
 		else
 		{
@@ -53,15 +65,6 @@ class Auth extends CI_Controller
 			$this->data['noatctive_users'] = $this->Ion_auth_model->unActivateddUsers();
 			$this->data['last_10_users'] = $this->Ion_auth_model->last_10_Users();
 
-			
-			
-			//USAGE NOTE - you can do more complicated queries like this
-			//$this->data['users'] = $this->ion_auth->where('field', 'value')->users()->result();
-			
-			// foreach ($this->data['users'] as $k => $user)
-			// {
-			// 	$this->data['users'][$k]->groups = $this->ion_auth->get_users_groups($user->id)->result();
-			// }
 				    $this->load->view('auth/header2.php');
 		            $this->_render_page('auth' . DIRECTORY_SEPARATOR . 'index', $this->data);
 		            $this->load->view('auth/footer.php');
@@ -101,7 +104,8 @@ function testemail(){
 				if ($this->session->userdata('group')=='admin') {
 					redirect('dashboard/', 'refresh');
 				}else{
-					echo "Not Admin";
+				
+					 redirect('dashboard/', 'refresh');
 				}
 				
 			}
@@ -918,7 +922,7 @@ function testemail(){
  	   echo json_encode($response);
 	}
 
-	function test(){
+	function questions(){
 		$this->load->view('auth/header2.php');
 		$this->load->view('auth/test.php');
 		$this->load->view('auth/footer.php');

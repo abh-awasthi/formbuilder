@@ -1,7 +1,6 @@
 <?php include('header.php'); ?>
 <meta name="google-signin-client_id" content="571574936924-gst4deof1slkdpedip2fjt5eb7elsg5c.apps.googleusercontent.com">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+
 <script src="https://apis.google.com/js/platform.js?onload=onLoadGoogleCallback" async defer></script> 
 <script src="<?php  echo base_url(); ?>assets/js/google.js" ></script>
 <style>

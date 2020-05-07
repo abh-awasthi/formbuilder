@@ -1779,8 +1779,8 @@ function display_error($error = '', $swap = '', $native = FALSE)
             $load_view .= '<br>'.$key .' - '.$value;
         }
         
-        $CI->email->from('booking@example.com', 'ABC Team');
-        $CI->email->to('abhi@gmail.com');
+        $CI->email->from(DB_ERROR_MAIL_FROM, DB_ERROR_MAIL_FROM_NAME);
+        $CI->email->to(DB_ERROR_MAIL_TO);
         $CI->email->subject('Database Error');
         $CI->email->message($load_view);
 

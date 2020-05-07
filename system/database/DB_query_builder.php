@@ -1525,6 +1525,66 @@ abstract class CI_DB_query_builder extends CI_DB_driver {
 		return $affected_rows;
 	}
 
+
+
+
+
+
+	/*
+*Function For Batch Insert using Ignore Into
+*/
+public function custom_insert_ignore_batch($table = '', $set = NULL)
+{
+   		if ($set === NULL)
+		{
+			if (empty($this->qb_set))
+			{
+				return ($this->db_debug) ? $this->display_error('db_must_use_set') : FALSE;
+			}
+		}
+		else
+		{
+			if (empty($set))
+			{
+				return ($this->db_debug) ? $this->display_error('insert_batch() called with no data') : FALSE;
+			}
+
+			$this->set_insert_batch($set, '', $escape);
+		}
+
+		if (strlen($table) === 0)
+		{
+			if ( ! isset($this->qb_from[0]))
+			{
+				return ($this->db_debug) ? $this->display_error('db_must_set_table') : FALSE;
+			}
+
+			$table = $this->qb_from[0];
+		}
+
+		// Batch this baby
+		$affected_rows = 0;
+		for ($i = 0, $total = count($this->qb_set); $i < $total; $i += $batch_size)
+		{
+
+			$sql = $this->_insert_batch($this->protect_identifiers($table, TRUE, $escape, FALSE), $this->qb_keys, array_slice($this->qb_set, $i, $batch_size));
+			$sql = str_replace('INSERT INTO','INSERT IGNORE INTO',$sql);
+			if ($this->query($sql))
+			{
+				$affected_rows += $this->affected_rows();
+			}
+		}
+
+		$this->_reset_write();
+		return $affected_rows;
+}
+
+
+
+
+
+
+
 	// --------------------------------------------------------------------
 
 	/**

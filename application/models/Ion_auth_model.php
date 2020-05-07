@@ -910,9 +910,11 @@ class Ion_auth_model extends CI_Model
 		}
 
 		// Users table.
+		$newEmail_user = explode('@',  $identity);
+		$usne_name = $newEmail_user[0].substr(mt_rand(), 3);
 		$data = [
 			$this->identity_column => $identity,
-			'username' => $identity,
+			'username' => $usne_name,
 			'password' => $password,
 			'email' => $email,
 			'ip_address' => $ip_address,
@@ -1010,7 +1012,7 @@ class Ion_auth_model extends CI_Model
 
 		$this->trigger_events('extra_where');
 
-		$query = $this->db->select($this->identity_column . ', email,first_name,last_name, users.id, password, active, last_login,groups.name as group_name,groups.description as group_desc')
+		$query = $this->db->select($this->identity_column . ', email,first_name,last_name,profile_pic,users.id, password, active,users_groups.group_id, last_login,groups.name as group_name,groups.description as group_desc')
 						 ->join('users_groups','users.id=users_groups.user_id')
 						 ->join('groups','groups.id=users_groups.group_id')
 						  ->where($this->identity_column, $identity)
@@ -2033,6 +2035,46 @@ class Ion_auth_model extends CI_Model
 		return TRUE;
 	}
 
+
+	function loginWithGoogle($data) {
+    $ifExists = $this->db
+      ->where('email', $data['email'])
+      ->where('active', 1)
+      ->get($this->usersTable)
+      ->num_rows();
+    if ($ifExists == 0) {
+      $this->session->set_userdata('userPositionSessId', 1);
+      $data = [
+        'user_name'         =>   $data['user_name'],
+        'user_email'        =>   $data['user_email'],
+        'user_uname'        =>   $data['user_uname'],
+        'user_google_login' =>   1,
+        'user_status'       =>   1,
+        'user_position'     =>   1,
+        'user_last_login'   =>  date("Y-m-d H:i:s")
+      ];
+      $loginWithGoogle = $this->db->insert($this->usersTable, $data);
+      return $loginWithGoogle;
+    } else {
+      $ifAdmin = $this->db
+        ->where('user_email', $data['user_email'])
+        ->where('user_status', 1)
+        ->get($this->usersTable)
+        ->row();
+      if($ifAdmin->user_position == 0) {
+        $this->session->set_userdata('userIDSess', $ifAdmin->user_id);
+        $this->session->set_userdata('userPositionSessId', 0);
+      } else {
+        $this->session->set_userdata('userIDSess', $ifAdmin->user_id);
+        $this->session->set_userdata('userPositionSessId', 1);
+      }
+    }
+  }
+
+
+
+
+
 	/**
 	 * set_session
 	 *
@@ -2053,7 +2095,10 @@ class Ion_auth_model extends CI_Model
 		    'last_name'            => $user->last_name,
 		    'user_id'              => $user->id, //everyone likes to overwrite id so we'll use user_id
 		    'old_last_login'       => $user->last_login,
+		    'gmailSessId'		   => 0,
 		    'group'                => $user->group_name,
+		    'group_id'			   => $user->group_id,
+		    'profile_pic'		   => $user->profile_pic,
 		    'group_desc'           => $user->group_desc,
 		    'last_check'           => time(),
 		];
@@ -2148,7 +2193,7 @@ class Ion_auth_model extends CI_Model
 		// get the user with the selector
 
 		$this->trigger_events('extra_where');
-		$query = $this->db->select($this->identity_column . ', email,first_name,last_name, users.id, password, active, last_login,groups.name as group_name,groups.description as group_desc')
+		$query = $this->db->select($this->identity_column . ', users_groups.group_id,email,first_name,profile_pic,last_name, users.id, password, active, last_login,groups.name as group_name,groups.description as group_desc')
 						  ->join('users_groups','users.id=users_groups.user_id')
 						  ->join('groups','groups.id=users_groups.group_id')
 						  ->where('remember_selector', $token->selector)
@@ -3050,6 +3095,8 @@ class Ion_auth_model extends CI_Model
 
 
 	}
+
+ 
 
 
 }

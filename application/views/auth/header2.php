@@ -27,6 +27,7 @@
 <script src="<?php echo base_url(); ?>assets/js/bootstrap_table.js"></script>
 <script src="<?php echo base_url(); ?>assets/js/modernizr.custom.js"></script>
 
+
 <!--webfonts-->
 <link href="//fonts.googleapis.com/css?family=PT+Sans:400,400i,700,700i&amp;subset=cyrillic,cyrillic-ext,latin-ext" rel="stylesheet">
 <!--//webfonts--> 
@@ -116,17 +117,17 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             </button>
-            <h1><a class="navbar-brand" href="index.html"><span class="fa fa-area-chart"></span> AA SOFT<span class="dashboard_text">Design dashboard</span></a></h1>
+            <h1><a class="navbar-brand" href="index.html"><span class="fa fa-area-chart"></span> AA SOFT<span class="dashboard_text">E Form</span></a></h1>
           </div>
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="sidebar-menu">
               <li class="header">MAIN NAVIGATION</li>
               <li class="treeview">
-                <a href="index.html">
+                <a href="<?php echo base_url(); ?>dashboard">
                 <i class="fa fa-dashboard"></i> <span>Dashboard</span>
                 </a>
               </li>
-
+<?php  if ($this->ion_auth->is_admin()) { ?>
               <li class="treeview">
                 <a href="#">
                 <i class="fa fa-user"></i>
@@ -139,18 +140,21 @@
                   <li><a href="#"><i class="fa fa-angle-right"></i>Online Users</a></li>
                 </ul>
               </li>
-
+<?php } ?>
 			  <li class="treeview">
                 <a href="#">
                 <i class="fa fa-laptop"></i>
-                <span>Components</span>
+                <span>Manage Forms</span>
                 <i class="fa fa-angle-left pull-right"></i>
                 </a>
                 <ul class="treeview-menu">
-                  <li><a href="#"><i class="fa fa-angle-right"></i> Grids</a></li>
-                  <li><a href="#"><i class="fa fa-angle-right"></i> Media Css</a></li>
+                  <li><a href="<?php echo base_url(); ?>form/create"><i class="fa fa-angle-right"></i>Create</a></li>
+                  <li><a href="<?php echo base_url(); ?>form/forms"><i class="fa fa-angle-right"></i>All Forms</a></li>
                 </ul>
               </li>
+
+
+<?php  if ($this->ion_auth->is_admin()) { ?>
               <li class="treeview">
                 <a href="#">
                 <i class="fa fa-pie-chart"></i>
@@ -158,7 +162,7 @@
                 <span class="label label-primary pull-right">new</span>
                 </a>
               </li>
-              <li class="treeview">
+               
               <li class="treeview">
                 <a href="#">
                 <i class="fa fa-laptop"></i>
@@ -178,24 +182,26 @@
                 <small class="label pull-right label-info">08</small>
                 </a>
               </li>
-
+<?php } ?>
               <li class="treeview">
                 <a href="#">
                 <i class="fa fa-envelope"></i> <span>Mailbox </span>
                 <i class="fa fa-angle-left pull-right"></i><small class="label pull-right label-info1">08</small><span class="label label-primary1 pull-right">02</span></a>
                 <ul class="treeview-menu">
                   <li><a href="#"><i class="fa fa-angle-right"></i> Mail Inbox </a></li>
-                  <li><a href="#"><i class="fa fa-angle-right"></i> Compose Mail </a></li>
+                  <li><a href="<?php echo base_url(); ?>user/sendBrocastMail"><i class="fa fa-angle-right"></i> Compose Mail </a></li>
                 </ul>
               </li>
 
-
-             <li class="treeview">
+<?php  if ($this->ion_auth->is_admin()) { ?>
+             <li class="treeview ">
                 <a href="<?php echo base_url(); ?>settings">
                 <i class="fa fa-envelope"></i> <span>Settings</span>
                 </a>
-             </li>
+            </li>
+<?php } ?>
 
+<?php  if ($this->ion_auth->is_admin()) { ?>
               <li class="treeview">
                 <a href="#">
                 <i class="fa fa-folder"></i> <span>Examples</span>
@@ -209,11 +215,17 @@
                   <li><a href="#"><i class="fa fa-angle-right"></i> Blank Page</a></li>
                 </ul>
               </li>
+
+
+
               <li class="header">LABELS</li>
               <li><a href="#"><i class="fa fa-angle-right text-red"></i> <span>Important</span></a></li>
               <li><a href="#"><i class="fa fa-angle-right text-yellow"></i> <span>Warning</span></a></li>
               <li><a href="#"><i class="fa fa-angle-right text-aqua"></i> <span>Information</span></a></li>
+<?php } ?>
+
             </ul>
+
           </div>
           <!-- /.navbar-collapse -->
       </nav>
@@ -223,7 +235,7 @@
 		
 		<!-- header-starts -->
 		<div class="sticky-header header-section ">
-			<div class="header-left">
+			<div class="header-left hide">
 				<!--toggle button start-->
 				<button id="showLeftPush"><i class="fa fa-bars"></i></button>
 				<!--toggle button end-->
@@ -384,7 +396,7 @@
 				
 				
 				<!--search-box-->
-				<div class="search-box">
+				<div class="search-box hide">
 					<form class="input">
 						<input class="sb-search-input input__field--madoka" placeholder="Search..." type="search" id="input-31" />
 						<label class="input__label" for="input-31">
@@ -399,8 +411,9 @@
 					<ul>
 						<li class="dropdown profile_details_drop">
 							<a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+
 								<div class="profile_img">	
-									<span class="prfil-img"><img src="<?php echo base_url(); ?>assets/images/2.jpg" alt=""> </span> 
+									<span class="prfil-img"><img style="height: 50px;width: 50px;" src="<?php echo (!empty($this->session->userdata('profile_pic')))?base_url().USERS_PROFILES_IMG.$this->session->userdata('profile_pic'):base_url()."assets/images/2.jpg" ?>" alt="Profile Pic"> </span> 
 									<div class="user-name">
 										<p><?php echo $this->session->userdata('first_name'); ?></p>
 										<span><?php echo $this->session->userdata('group_desc'); ?></span>
@@ -411,9 +424,9 @@
 								</div>	
 							</a>
 							<ul class="dropdown-menu drp-mnu">
-								<li> <a href="#"><i class="fa fa-cog"></i> Settings</a> </li> 
-								<li> <a href="#"><i class="fa fa-user"></i> My Account</a> </li> 
-								<li> <a href="#"><i class="fa fa-suitcase"></i> Profile</a> </li> 
+								<li class="hide"> <a href="#"><i class="fa fa-cog"></i> Settings</a> </li> 
+								<li class="hide"> <a href="#"><i class="fa fa-user"></i> My Account</a> </li> 
+								<li> <a href="<?php echo base_url(); ?>user"><i class="fa fa-suitcase"></i> Profile</a> </li> 
 								<li> <a href="<?php echo base_url(); ?>logout"><i class="fa fa-sign-out"></i> Logout</a> </li>
 							</ul>
 						</li>
