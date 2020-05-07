@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # MongoDB PHP Driver
 
 [![Travis Build Status](https://api.travis-ci.org/mongodb/mongo-php-driver.png?branch=master)](https://travis-ci.org/mongodb/mongo-php-driver)
@@ -66,4 +66,4 @@ JIRA. Documentation for contributing to this project may be found in
 =======
 # formbuilder
 Form Builder
->>>>>>> be4d216cb76b717d51171fd24fa0f6683921aa50
+
